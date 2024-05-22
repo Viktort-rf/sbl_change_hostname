@@ -5,9 +5,9 @@ from netmiko import ConnectHandler
 from pynetbox import api
 
 netbox_url = "https://netbox.example.ru"
-# Regex для поиска устройств согласно шаблона
-name_regex = [re.compile(r"^skd.*"),
-              re.compile(r"^skr.*")]
+# Regex для поиска устройств согласно шаблона не учитывая регистр
+name_regex = [re.compile(r"^skd.*", re.IGNORECASE),
+              re.compile(r"^skr.*", re.IGNORECASE)]
 # Включение логирования ssh сессий для платформы
 enable_cisco_sessions_log = False
 enable_mes23_sessions_log = False
@@ -87,7 +87,12 @@ def change_hostname_cisco(cisco_ip_address, cisco_username, cisco_password, cisc
 
     net_connect = ConnectHandler(**device_info)
     sh_cisco_hostname = net_connect.send_command("show running-config | include hostname")
-    if cisco_dev_name not in sh_cisco_hostname:
+    sh_cisco_hostname = sh_cisco_hostname.split("\n")
+    for i in sh_cisco_hostname:
+        if i.startswith("hostname"):
+            sh_cisco_hostname = i[9::]
+            break
+    if cisco_dev_name != sh_cisco_hostname:
         net_connect.send_config_set(f"hostname {cisco_dev_name}")
         net_connect.send_command("write memory")
         net_connect.disconnect()
@@ -124,7 +129,12 @@ def change_hostname_mes23(mes23_ip_address, mes23_username, mes23_password, mes2
 
     net_connect = ConnectHandler(**device_info)
     sh_mes23_hostname = net_connect.send_command("show running-config | include hostname")
-    if mes23_dev_name not in sh_mes23_hostname:
+    sh_mes23_hostname = sh_mes23_hostname.split("\n")
+    for i in sh_mes23_hostname:
+        if i.startswith("hostname"):
+            sh_mes23_hostname = i[9::]
+            break
+    if mes23_dev_name != sh_mes23_hostname:
         net_connect.send_config_set(f"hostname {mes23_dev_name}", cmd_verify=False)
         wr_mem = net_connect.send_command_timing("write memory")
         if "Overwrite file [startup-config]" in wr_mem:
@@ -164,7 +174,12 @@ def change_hostname_mes24(mes24_ip_address, mes24_username, mes24_password, mes2
     net_connect = ConnectHandler(**device_info)
     net_connect.send_command("set cli pagination off")
     sh_mes24_hostname = net_connect.send_command("show running-config | grep hostname")
-    if mes24_dev_name not in sh_mes24_hostname:
+    sh_mes24_hostname = sh_mes24_hostname.split("\n")
+    for i in sh_mes24_hostname:
+        if i.startswith("hostname"):
+            sh_mes24_hostname = i[9::].replace('"','').strip()
+            break
+    if mes24_dev_name != sh_mes24_hostname:
         net_connect.send_config_set(f"hostname {mes24_dev_name}", cmd_verify=False)
         net_connect.send_command("write startup-config")
         net_connect.disconnect()
@@ -201,7 +216,12 @@ def change_hostname_esr(esr_ip_address, esr_username, esr_password, esr_dev_name
 
     net_connect = ConnectHandler(**device_info)
     sh_esr_hostname = net_connect.send_command("show running-config | include hostname")
-    if esr_dev_name not in sh_esr_hostname:
+    sh_esr_hostname = sh_esr_hostname.split("\n")
+    for i in sh_esr_hostname:
+        if i.startswith("hostname"):
+            sh_esr_hostname = i[9::]
+            break
+    if esr_dev_name != sh_esr_hostname:
         net_connect.send_config_set([f"hostname {esr_dev_name}",
                                      "do commit",
                                      "do confirm",
@@ -240,7 +260,12 @@ def change_hostname_qsw46(qsw46_ip_address, qsw46_username, qsw46_password, qsw4
 
     net_connect = ConnectHandler(**device_info)
     sh_qsw46_hostname = net_connect.send_command("show running-config | include hostname")
-    if qsw46_dev_name not in sh_qsw46_hostname:
+    sh_qsw46_hostname = sh_qsw46_hostname.split("\n")
+    for i in sh_qsw46_hostname:
+        if i.startswith("hostname"):
+            sh_qsw46_hostname = i[9::]
+            break
+    if qsw46_dev_name != sh_qsw46_hostname:
         net_connect.send_config_set(f"hostname {qsw46_dev_name}", config_mode_command="config terminal")
         wr_mem = net_connect.send_command_timing("write running-config")
         if "Confirm to overwrite current startup-config configuration [Y/N]:" in wr_mem:
@@ -279,7 +304,12 @@ def change_hostname_qsw33(qsw33_ip_address, qsw33_username, qsw33_password, qsw3
 
     net_connect = ConnectHandler(**device_info)
     sh_qsw33_hostname = net_connect.send_command("show running-config | include hostname")
-    if qsw33_dev_name not in sh_qsw33_hostname:
+    sh_qsw33_hostname = sh_qsw33_hostname.split("\n")
+    for i in sh_qsw33_hostname:
+        if i.startswith("hostname"):
+            sh_qsw33_hostname = i[9::].replace('"','').strip()
+            break
+    if qsw33_dev_name != sh_qsw33_hostname:
         net_connect.send_config_set(f"hostname {qsw33_dev_name}")
         wr_mem = net_connect.send_command_timing("write memory")
         if "Are you sure you want to save?" in wr_mem:
@@ -319,7 +349,12 @@ def change_hostname_qsr(qsr_ip_address, qsr_username, qsr_password, qsr_dev_name
     net_connect = ConnectHandler(**device_info)
     net_connect.send_command("more off")
     sh_qsr_hostname = net_connect.send_command("show running-config | include hostname")
-    if qsr_dev_name not in sh_qsr_hostname:
+    sh_qsr_hostname = sh_qsr_hostname.split("\n")
+    for i in sh_qsr_hostname:
+        if i.startswith("hostname"):
+            sh_qsr_hostname = i[9::]
+            break
+    if qsr_dev_name != sh_qsr_hostname:
         net_connect.send_config_set(f"hostname {qsr_dev_name}")
         wr_mem = net_connect.send_command_timing("write")
         if "Are you sure to overwrite" in wr_mem:
