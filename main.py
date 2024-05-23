@@ -33,6 +33,31 @@ logging.basicConfig(filename='error.log', filemode='w', level=logging.ERROR, for
                     datefmt='%Y-%m-%d %H:%M:%S')
 
 
+def remove_parentheses_substrings(s: str) -> str:
+    """
+    Удаляет подстроки, заключенные в круглые скобки, из входной строки.
+
+    Параметры:
+        s (str): Входная строка, из которой нужно удалить содержимое скобок вместе с самими скобками.
+
+    Возвращает:
+        str: Строку без подстрок в круглых скобках.
+    
+    Примеры:
+        >>> remove_parentheses_substrings("skd020-brcsw01(1)")
+        'skd020-brcsw01'
+        
+        >>> remove_parentheses_substrings("example(text)string")
+        'examplestring'
+        
+        >>> remove_parentheses_substrings("no_parentheses_here")
+        'no_parentheses_here'
+    """
+    pattern = r'\(.*?\)'
+    result = re.sub(pattern, '', s)
+    return result
+
+
 def get_devices(nb_url, nb_token, device_name_regex):
     """
     Функция получает список активных устройств из NetBox, фильтрует их по регулярному выражению для имен устройств
@@ -55,7 +80,7 @@ def get_devices(nb_url, nb_token, device_name_regex):
             if regex.match(device.name):
                 filtered_devices[device.primary_ip.address.split("/")[0]] = {
                     "device_platform": device.platform.slug,
-                    "device_name": device.name
+                    "device_name": remove_parentheses_substrings(device.name).lower()
                 }
     return filtered_devices
 
